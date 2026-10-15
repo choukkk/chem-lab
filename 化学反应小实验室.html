@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>化学反应小实验室</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Microsoft Yahei", sans-serif;
+        }
+        body {
+            background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+            color: #fff;
+            min-height: 100vh;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        h1 {
+            font-size: 32px;
+            color: #73e8ff;
+            text-shadow: 0 0 10px #29b6f6;
+        }
+        .tip-text {
+            font-size: 20px;
+            color: #b0eaff;
+            margin-top: 8px;
+        }
+        .main-wrap {
+            display: grid;
+            grid-template-columns: 260px 1fr 280px;
+            gap: 20px;
+        }
+
+        /* 物质素材栏 */
+        .material-box {
+            background: rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 16px;
+            border: 1px solid rgba(115, 232, 255, 0.3);
+        }
+        .material-box h3 {
+            margin-bottom:12px;
+            color:#73e8ff;
+        }
+        .material-item {
+            background: rgba(41, 182, 246, 0.15);
+            border:1px solid #29b6f6;
+            border-radius:8px;
+            padding:10px;
+            margin-bottom:8px;
+            cursor: grab;
+            user-select:none;
+            transition:0.2s;
+        }
+        .material-item:hover {
+            background: rgba(41, 182, 246, 0.3);
+            transform: translateX(4px);
+        }
+        .material-item.locked {
+            opacity:0.4;
+            cursor:not-allowed;
+            border-color:#666;
+        }
+
+        /* 实验区 */
+        .lab-area {
+            background: rgba(255,255,255,0.08);
+            border-radius:12px;
+            padding:20px;
+            border:1px solid rgba(115, 232, 255, 0.2);
+            text-align:center;
+        }
+        .test-tube-wrap {
+            width:220px;
+            height:360px;
+            margin:0 auto;
+            position:relative;
+        }
+        .test-tube {
+            width:160px;
+            height:280px;
+            border:3px solid rgba(255,255,255,0.7);
+            border-radius:0 0 80px 80px;
+            border-top:none;
+            position:absolute;
+            bottom:0;
+            left:50%;
+            transform:translateX(-50%);
+            overflow:hidden;
+            background: rgba(255,255,255,0.05);
+        }
+        .tube-top {
+            width:180px;
+            height:12px;
+            border:3px solid rgba(255,255,255,0.7);
+            border-bottom:none;
+            border-radius:6px 6px 0 0;
+            position:absolute;
+            bottom:280px;
+            left:50%;
+            transform:translateX(-50%);
+        }
+        .slot {
+            width:135px;
+            height:70px;
+            border:2px dashed #88ccff;
+            border-radius:8px;
+            position:absolute;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            font-size:12px;
+            color:#99ccff;
+        }
+        #slot1 {left:10px; top:20px;}
+        #slot2 {left:10px; top:100px;}
+
+        .drop-item {
+            padding:4px 6px;
+            background:#1565c0;
+            border-radius:4px;
+            font-size:13px;
+        }
+        .reaction-view {
+            margin-top:20px;
+            min-height:120px;
+        }
+        .effect-area {
+            height:80px;
+            position:relative;
+        }
+        .bubble {
+            position:absolute;
+            background:#80d8ff;
+            border-radius:50%;
+            animation:bubbleUp 1.2s infinite ease-out;
+        }
+        @keyframes bubbleUp {
+            0{bottom:0;opacity:1;transform:scale(0.5);}
+            100%{bottom:80px;opacity:0;transform:scale(1.2);}
+        }
+        .spark {
+            width:6px;height:6px;
+            background:#ffd600;
+            border-radius:50%;
+            position:absolute;
+            animation:spark 0.6s infinite;
+        }
+        @keyframes spark {
+            0%,100%{opacity:0.2;}
+            50%{opacity:1;box-shadow:0 0 8px #ffea00;}
+        }
+        .rust-effect {
+            width:100%;height:100%;
+            background:radial-gradient(#96532e, transparent);
+            animation:fadeRust 2s forwards;
+        }
+        @keyframes fadeRust {
+            0{opacity:0;}
+            100%{opacity:0.7;}
+        }
+        .btn-group {
+            margin-top:16px;
+        }
+        button {
+            padding:9px 18px;
+            border:none;
+            border-radius:6px;
+            background:#29b6f6;
+            color:#fff;
+            cursor:pointer;
+            font-size:15px;
+            margin:0 6px;
+            transition:0.2s;
+        }
+        button:hover {background:#0288d1;}
+        button.reset-btn {background:#ef5350;}
+        button.reset-btn:hover {background:#d32f2f;}
+
+        /* 任务面板 */
+        .task-box {
+            background: rgba(255,255,255,0.1);
+            border-radius:12px;
+            padding:16px;
+            border:1px solid rgba(115, 232, 255, 0.3);
+        }
+        .task-box h3 {
+            color:#73e8ff;
+            margin-bottom:12px;
+        }
+        .task-item {
+            padding:8px;
+            border-bottom:1px solid rgba(255,255,255,0.1);
+            font-size:14px;
+        }
+        .task-item.done {
+            color:#81c784;
+        }
+        .task-real-formula{
+            margin-top:4px;
+            color:#a0e8af;
+        }
+
+        /* 弹窗样式 */
+        .mask {
+            position:fixed;
+            top:0;left:0;right:0;bottom:0;
+            background:rgba(0,0,0,0.75);
+            display:none;
+            align-items:center;
+            justify-content:center;
+            z-index:999;
+        }
+        .modal {
+            width:520px;
+            background:#192f3b;
+            border-radius:12px;
+            padding:24px;
+            border:1px solid #29b6f6;
+        }
+        .modal h2 {
+            color:#73e8ff;
+            margin-bottom:12px;
+        }
+        .safe-warning {
+            background:rgba(239,83,80,0.15);
+            border:1px solid #ef5350;
+            padding:10px;
+            border-radius:6px;
+            margin:12px 0;
+        }
+        .modal-btn {
+            margin-top:16px;
+            text-align:right;
+        }
+
+        /* 实验手册 */
+        .handbook-list {
+            max-height:300px;
+            overflow-y:auto;
+        }
+        .handbook-item {
+            padding:6px 0;
+            border-bottom:1px solid rgba(255,255,255,0.1);
+        }
+
+        @media (max-width:900px){
+            .main-wrap {
+                grid-template-columns:1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <h1>🧪 化学反应小实验室</h1>
+        <p class="tip-text">拖拽两种物质放入试管，探索化学反应 | 安全科普实验</p>
+    </header>
+    <div class="main-wrap">
+        <!-- 物质列表 -->
+        <div class="material-box">
+            <h3>可用物质</h3>
+            <div id="materialList"></div>
+        </div>
+
+        <!-- 实验区域 -->
+        <div class="lab-area">
+            <div class="test-tube-wrap">
+                <div class="tube-top"></div>
+                <div class="test-tube">
+                    <div class="slot" id="slot1">物质A</div>
+                    <div class="slot" id="slot2">物质B</div>
+                </div>
+            </div>
+            <div class="effect-area" id="effectArea"></div>
+            <div class="reaction-view">
+                <p id="reactionText">请将左侧物质拖拽至试管内两个空位进行混合实验</p>
+            </div>
+            <div class="btn-group">
+                <button class="reset-btn" onclick="clearTube()">清空试管</button>
+                <button onclick="openHandbook()">📖 实验手册</button>
+            </div>
+        </div>
+
+        <!-- 任务面板 -->
+        <div class="task-box">
+            <h3>实验任务（解锁新物质）</h3>
+            <div id="taskList"></div>
+            <p style="margin-top:12px">已完成：<span id="finishCount">0</span>/10</p>
+        </div>
+    </div>
+</div>
+
+<!-- 反应科普弹窗 -->
+<div class="mask" id="infoMask">
+    <div class="modal">
+        <h2 id="modalTitle">反应信息</h2>
+        <div id="modalContent"></div>
+        <div class="safe-warning">
+            ⚠️ 安全提示：本模拟器仅用于科普！强酸、强碱、易燃易爆物质不要私下混合实验！
+        </div>
+        <div class="modal-btn">
+            <button onclick="closeMask()">知道了</button>
+        </div>
+    </div>
+</div>
+
+<!-- 实验手册弹窗 -->
+<div class="mask" id="handbookMask">
+    <div class="modal">
+        <h2>📖 我的化学实验手册</h2>
+        <div class="handbook-list" id="handbookContent">
+            <p>暂未记录任何反应，快去完成实验吧！</p>
+        </div>
+        <div class="modal-btn">
+            <button onclick="closeHandbook()">关闭</button>
+        </div>
+    </div>
+</div>
+
+<script>
+// ========== 音效系统（WebAudio 原生生成，无需音频文件） ==========
+let audioCtx = null;
+function initAudio(){
+    if(!audioCtx){
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+}
+
+// 气泡音效
+function playBubbleSound(){
+    initAudio();
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(250, audioCtx.currentTime + 0.35);
+    gain.gain.setValueAtTime(0, audioCtx.currentTime);
+    gain.gain.linearRampToValueAtTime(0.22, audioCtx.currentTime + 0.05);
+    gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.35);
+    osc.start();
+    osc.stop(audioCtx.currentTime + 0.35);
+}
+
+// 燃烧火花音效
+function playFireSound(){
+    initAudio();
+    const noise = audioCtx.createBufferSource();
+    const gain = audioCtx.createGain();
+    const filter = audioCtx.createBiquadFilter();
+    filter.type = "lowpass";
+    filter.frequency.value = 900;
+
+    const bufferSize = audioCtx.sampleRate * 0.6;
+    const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for(let i=0;i<bufferSize;i++){
+        data[i] = Math.random() * 2 - 1;
+    }
+    noise.buffer = buffer;
+    noise.connect(filter);
+    filter.connect(gain);
+    gain.connect(audioCtx.destination);
+
+    gain.gain.setValueAtTime(0, audioCtx.currentTime);
+    gain.gain.linearRampToValueAtTime(0.25, audioCtx.currentTime + 0.05);
+    gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.6);
+    noise.start();
+}
+
+// 轻微失败提示音
+function playErrorSound(){
+    initAudio();
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.type = "triangle";
+    osc.frequency.value = 180;
+    gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+    gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.2);
+    osc.start();
+    osc.stop(audioCtx.currentTime + 0.2);
+}
+
+// 全部物质定义
+const materialData = [
+    {id:"water", name:"水", unlock:true},
+    {id:"oxygen", name:"氧气", unlock:true},
+    {id:"iron", name:"铁", unlock:true},
+    {id:"carbon", name:"碳", unlock:true},
+    {id:"vinegar", name:"白醋", unlock:true},
+    {id:"soda", name:"小苏打", unlock:false},
+    {id:"limewater", name:"石灰水", unlock:false},
+    {id:"salt", name:"食盐", unlock:false},
+    {id:"hydrogen", name:"氢气", unlock:false},
+    {id:"copper", name:"铜", unlock:false},
+];
+
+// 全部化学反应组合
+const reactionData = [
+    {
+        m1:"soda", m2:"vinegar",
+        name:"小苏打 + 白醋",
+        desc:"发生复分解反应，生成二氧化碳气体，产生大量气泡",
+        use:"生活中可以用来疏通轻微堵塞的下水道、自制简易灭火器",
+        effect:"bubble",
+        taskId:1
+    },
+    {
+        m1:"iron", m2:"oxygen",
+        name:"铁 + 氧气",
+        desc:"铁与氧气缓慢氧化生成氧化铁（铁锈）；潮湿环境反应更快",
+        use:"铁器长期暴露在空气中生锈，因此需要涂油漆防锈",
+        effect:"rust",
+        taskId:2
+    },
+    {
+        m1:"carbon", m2:"oxygen",
+        name:"碳 + 氧气",
+        desc:"碳充分燃烧生成二氧化碳，发光放热",
+        use:"木炭取暖、篝火燃烧都属于该反应",
+        effect:"spark",
+        taskId:3
+    },
+    {
+        m1:"carbon", m2:"limewater",
+        name:"二氧化碳 + 石灰水",
+        desc:"二氧化碳与氢氧化钙反应，溶液变浑浊",
+        use:"实验室检验二氧化碳气体",
+        effect:"cloud",
+        taskId:4
+    },
+    {
+        m1:"hydrogen", m2:"oxygen",
+        name:"氢气 + 氧气",
+        desc:"氢气燃烧生成水，淡蓝色火焰，释放大量热量",
+        use:"氢能源燃料原理",
+        effect:"spark",
+        taskId:5
+    },
+    {
+        m1:"copper", m2:"oxygen",
+        name:"铜 + 氧气",
+        desc:"铜加热后与氧气反应生成黑色氧化铜",
+        use:"铜器长期放置表面发黑",
+        effect:"rust",
+        taskId:6
+    },
+    {
+        m1:"vinegar", m2:"limewater",
+        name:"白醋 + 石灰水",
+        desc:"酸碱中和反应，生成盐和水",
+        use:"利用弱酸中和碱性污渍",
+        effect:"bubble",
+        taskId:7
+    },
+    {
+        m1:"iron", m2:"water",
+        name:"铁 + 水",
+        desc:"潮湿环境加速铁的锈蚀，水是铁生锈必要条件",
+        use:"铁器避免淋雨防止生锈",
+        effect:"rust",
+        taskId:8
+    },
+    {
+        m1:"carbon", m2:"water",
+        name:"高温碳 + 水",
+        desc:"高温下碳与水反应生成水煤气",
+        use:"工业煤气制备原理",
+        effect:"bubble",
+        taskId:9
+    },
+    {
+        m1:"salt", m2:"water",
+        name:"食盐 + 水",
+        desc:"食盐溶解于水，属于物理溶解，无新物质生成",
+        use:"日常盐水调配",
+        effect:"none",
+        taskId:10
+    }
+];
+
+// 任务列表（增加真实配方name）
+const taskList = [
+    {id:1, hint:"完成一组未知化学反应", formula:"小苏打 + 白醋", target:"soda,vinegar", done:false, unlock:"soda"},
+    {id:2, hint:"完成一组未知化学反应", formula:"铁 + 氧气", target:"iron,oxygen", done:false, unlock:"limewater"},
+    {id:3, hint:"完成一组未知化学反应", formula:"碳 + 氧气", target:"carbon,oxygen", done:false, unlock:"salt"},
+    {id:4, hint:"完成一组未知化学反应", formula:"二氧化碳 + 石灰水", target:"carbon,limewater", done:false, unlock:"hydrogen"},
+    {id:5, hint:"完成一组未知化学反应", formula:"氢气 + 氧气", target:"hydrogen,oxygen", done:false, unlock:"copper"},
+    {id:6, hint:"完成一组未知化学反应", formula:"铜 + 氧气", target:"copper,oxygen", done:false, unlock:""},
+    {id:7, hint:"完成一组未知化学反应", formula:"白醋 + 石灰水", target:"vinegar,limewater", done:false, unlock:""},
+    {id:8, hint:"完成一组未知化学反应", formula:"铁 + 水", target:"iron,water", done:false, unlock:""},
+    {id:9, hint:"完成一组未知化学反应", formula:"高温碳 + 水", target:"carbon,water", done:false, unlock:""},
+    {id:10, hint:"完成一组未知化学反应", formula:"食盐 + 水", target:"salt,water", done:false, unlock:""},
+];
+
+// 全局状态
+let slotA = null;
+let slotB = null;
+let handbook = [];
+
+// 渲染物质列表
+function renderMaterial(){
+    const wrap = document.getElementById("materialList");
+    wrap.innerHTML = "";
+    materialData.forEach(mat=>{
+        const div = document.createElement("div");
+        div.className = "material-item " + (mat.unlock ? "" : "locked");
+        div.innerText = mat.name;
+        div.draggable = mat.unlock;
+        div.dataset.id = mat.id;
+        if(mat.unlock){
+            div.addEventListener("dragstart",e=>{
+                e.dataTransfer.setData("matId", mat.id);
+            })
+        }
+        wrap.appendChild(div);
+    })
+}
+
+// 渲染任务【核心修改：未完成只显示hint，完成显示真实配方】
+function renderTask(){
+    const wrap = document.getElementById("taskList");
+    wrap.innerHTML = "";
+    let finish = 0;
+    taskList.forEach(t=>{
+        if(t.done) finish++;
+        const div = document.createElement("div");
+        div.className = "task-item";
+        let htmlText = "";
+        if(t.done){
+            div.classList.add("done");
+            htmlText = `✅ <div class="task-real-formula">配方：${t.formula}</div>`;
+        }else{
+            htmlText = `⬜ ${t.hint}`;
+        }
+        div.innerHTML = htmlText;
+        wrap.appendChild(div);
+    })
+    document.getElementById("finishCount").innerText = finish;
+}
+
+// 放置拖拽
+const slot1 = document.getElementById("slot1");
+const slot2 = document.getElementById("slot2");
+
+[slot1, slot2].forEach(slot=>{
+    slot.addEventListener("dragover",e=>e.preventDefault());
+    slot.addEventListener("drop",e=>{
+        e.preventDefault();
+        const matId = e.dataTransfer.getData("matId");
+        if(!matId) return;
+        const mat = materialData.find(m=>m.id===matId);
+        if(!mat.unlock) return;
+
+        if(slot.id === "slot1"){
+            slotA = matId;
+            slot1.innerHTML = `<span class="drop-item">${mat.name}</span>`;
+        }else{
+            slotB = matId;
+            slot2.innerHTML = `<span class="drop-item">${mat.name}</span>`;
+        }
+        if(slotA && slotB){
+            startReaction();
+        }
+    })
+})
+
+// 执行反应判断
+function startReaction(){
+    const effectBox = document.getElementById("effectArea");
+    effectBox.innerHTML = "";
+    let find = null;
+    // 正反组合都匹配
+    find = reactionData.find(r=>
+        (r.m1===slotA && r.m2===slotB) || (r.m1===slotB && r.m2===slotA)
+    );
+
+    const textDom = document.getElementById("reactionText");
+    if(find){
+        textDom.innerText = `✅ 发生化学反应：${find.name}`;
+        runEffect(find.effect);
+        showModal(find);
+        checkTask(find);
+        // 根据特效播放对应音效
+        if(find.effect === "bubble"){
+            playBubbleSound();
+        }else if(find.effect === "spark"){
+            playFireSound();
+        }
+        // 写入手册
+        if(!handbook.find(h=>h.name===find.name)){
+            handbook.push(find);
+        }
+    }else{
+        textDom.innerText = "❌ 无化学反应发生，可以尝试更换物质组合！";
+        playErrorSound();
+    }
+}
+
+// 播放动画特效
+function runEffect(type){
+    const box = document.getElementById("effectArea");
+    box.innerHTML = "";
+    if(type === "bubble"){
+        for(let i=0;i<12;i++){
+            const b = document.createElement("div");
+            b.className="bubble";
+            b.style.width=(6+Math.random()*12)+"px";
+            b.style.height=b.style.width;
+            b.style.left=(Math.random()*90)+"%";
+            b.style.animationDelay = Math.random()+"s";
+            box.appendChild(b);
+        }
+    }else if(type === "spark"){
+        for(let i=0;i<20;i++){
+            const s = document.createElement("div");
+            s.className="spark";
+            s.style.left=(Math.random()*95)+"%";
+            s.style.top=(Math.random()*70)+"%";
+            s.style.animationDelay = Math.random()*0.5+"s";
+            box.appendChild(s);
+        }
+    }else if(type === "rust" || type === "cloud"){
+        const r = document.createElement("div");
+        r.className="rust-effect";
+        box.appendChild(r);
+    }
+}
+
+// 弹窗展示信息
+function showModal(info){
+    document.getElementById("modalTitle").innerText = info.name;
+    const content = `
+        <p><strong>反应原理：</strong>${info.desc}</p>
+        <p style="margin-top:8px"><strong>生活应用：</strong>${info.use}</p>
+    `;
+    document.getElementById("modalContent").innerHTML = content;
+    document.getElementById("infoMask").style.display = "flex";
+}
+function closeMask(){
+    document.getElementById("infoMask").style.display = "none";
+}
+
+// 检测任务完成、解锁物质
+function checkTask(reaction){
+    const task = taskList.find(t=>t.id === reaction.taskId);
+    if(!task || task.done) return;
+    task.done = true;
+    // 解锁新物质
+    if(task.unlock){
+        const mat = materialData.find(m=>m.id === task.unlock);
+        if(mat) mat.unlock = true;
+    }
+    renderMaterial();
+    renderTask();
+}
+
+// 清空试管
+function clearTube(){
+    slotA = null;
+    slotB = null;
+    slot1.innerText = "物质A";
+    slot2.innerText = "物质B";
+    document.getElementById("effectArea").innerHTML = "";
+    document.getElementById("reactionText").innerText = "请将左侧物质拖拽至试管内两个空位进行混合实验";
+}
+
+// 实验手册
+function openHandbook(){
+    const wrap = document.getElementById("handbookContent");
+    if(handbook.length ===0){
+        wrap.innerHTML = "<p>暂未记录任何反应，快去完成实验吧！</p>";
+    }else{
+        let html = "";
+        handbook.forEach(item=>{
+            html += `<div class="handbook-item">🔬 ${item.name}<br>${item.desc}</div>`;
+        })
+        wrap.innerHTML = html;
+    }
+    document.getElementById("handbookMask").style.display = "flex";
+}
+function closeHandbook(){
+    document.getElementById("handbookMask").style.display = "none";
+}
+
+// 初始化
+renderMaterial();
+renderTask();
+</script>
+</body>
+</html>
